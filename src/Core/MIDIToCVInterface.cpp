@@ -8,6 +8,7 @@ extern void vst2_get_timing_info (int *_retPlaying, float *_retBPM, float *_retS
 #include "midi.hpp"
 #include "dsp/digital.hpp"
 #include "dsp/filter.hpp"
+#include "libMTSClient.h"
 
 #include <algorithm>
 #include "global.hpp"
@@ -72,9 +73,16 @@ struct MIDIToCVInterface : Module {
 	uint8_t lastNote;
 	bool pedal;
 	bool gate;
+	
+	MTSClient *mtsClient;
 
 	MIDIToCVInterface() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS), heldNotes(128) {
+		mtsClient = MTS_RegisterClient();
 		onReset();
+	}
+	
+	virtual ~MIDIToCVInterface() {
+		MTS_DeregisterClient(mtsClient);
 	}
 
 	json_t *toJson() override {
@@ -250,7 +258,9 @@ struct MIDIToCVInterface : Module {
       handleVSTClock();
 #endif // USE_VST2
 
-		outputs[CV_OUTPUT].value = (lastNote - 60) / 12.f;
+		float notef = lastNote;
+		if (mtsClient) notef += MTS_RetuningInSemitones(mtsClient, notes[c]);
+		outputs[CV_OUTPUT].value = (notef - 60.f) / 12.f;
 		outputs[GATE_OUTPUT].value = gate ? 10.f : 0.f;
 		outputs[VELOCITY_OUTPUT].value = rescale(noteData[lastNote].velocity, 0, 127, 0.f, 10.f);
 

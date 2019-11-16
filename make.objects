@@ -94,6 +94,7 @@ HOST_OBJ= \
 	src/Core/Core.o \
 	src/Core/MIDICCToCVInterface.o \
 	src/Core/MIDIToCVInterface.o \
+	src/Core/libMTSClient.o \
 	src/Core/MIDITriggerToCVInterface.o \
 	src/Core/Notes.o \
 	src/Core/QuadMIDIToCVInterface.o \
